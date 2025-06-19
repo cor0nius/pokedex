@@ -6,10 +6,6 @@ type cliCommand struct {
 	callback    func() error
 }
 
-type Decoder struct {
-	Name string `json:"name"`
-}
-
 func getCommands() func() map[string]cliCommand {
 	return func() map[string]cliCommand {
 		comms := map[string]cliCommand{
