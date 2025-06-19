@@ -6,7 +6,11 @@ type cliCommand struct {
 	callback    func() error
 }
 
-func prepareCommands() func() map[string]cliCommand {
+type Decoder struct {
+	Name string `json:"name"`
+}
+
+func getCommands() func() map[string]cliCommand {
 	return func() map[string]cliCommand {
 		comms := map[string]cliCommand{
 			"help": {
@@ -18,6 +22,16 @@ func prepareCommands() func() map[string]cliCommand {
 				name:        "exit",
 				description: "Exit the Pokedex",
 				callback:    commandExit,
+			},
+			"map": {
+				name:        "map",
+				description: "Display a list of next 20 locations",
+				callback:    commandMap,
+			},
+			"mapb": {
+				name:        "mapb",
+				description: "Display a list of previous 20 locations",
+				callback:    commandMapb,
 			},
 		}
 		return comms
