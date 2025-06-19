@@ -17,7 +17,7 @@ func main() {
 			fmt.Println("Unknown command")
 		} else {
 			if err := comm.callback(); err != nil {
-				fmt.Errorf("Error: %w", err)
+				fmt.Printf("Error: %v", err)
 			}
 		}
 	}
