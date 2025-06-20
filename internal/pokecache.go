@@ -34,10 +34,9 @@ func (c *Cache) reapLoop(interval time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	ticker := time.NewTicker(interval)
-	defer ticker.Stop()
-	func() {
-		t := <-ticker.C
+	go func() {
 		for {
+			t := <-ticker.C
 			for entry := range c.entries {
 				if t.After(c.entries[entry].createdAt.Add(interval)) {
 					delete(c.entries, entry)
@@ -50,6 +49,6 @@ func (c *Cache) reapLoop(interval time.Duration) {
 func NewCache(interval time.Duration) *Cache {
 	entries := map[string]cacheEntry{}
 	cache := Cache{entries, sync.Mutex{}}
-	go cache.reapLoop(interval)
+	cache.reapLoop(interval)
 	return &cache
 }
