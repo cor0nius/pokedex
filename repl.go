@@ -36,17 +36,24 @@ func commandHelp(cache *pc.Cache) error {
 
 func commandMap(cache *pc.Cache) error {
 	var locationAreas locationAreaAPI
+	var data []byte
 	url := nextPage(true)
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+	_, ok := cache.Get(url)
+	if !ok {
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		data, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		cache.Add(url, data)
+	} else {
+		data, _ = cache.Get(url)
 	}
-	defer resp.Body.Close()
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(data, &locationAreas)
+	err := json.Unmarshal(data, &locationAreas)
 	if err != nil {
 		return err
 	}
@@ -59,17 +66,24 @@ func commandMap(cache *pc.Cache) error {
 func commandMapb(cache *pc.Cache) error {
 	if mapPage > 1 {
 		var locationAreas locationAreaAPI
+		var data []byte
 		url := nextPage(false)
-		resp, err := http.Get(url)
-		if err != nil {
-			return err
+		_, ok := cache.Get(url)
+		if !ok {
+			resp, err := http.Get(url)
+			if err != nil {
+				return err
+			}
+			defer resp.Body.Close()
+			data, err = io.ReadAll(resp.Body)
+			if err != nil {
+				return err
+			}
+			cache.Add(url, data)
+		} else {
+			data, _ = cache.Get(url)
 		}
-		defer resp.Body.Close()
-		data, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
-		err = json.Unmarshal(data, &locationAreas)
+		err := json.Unmarshal(data, &locationAreas)
 		if err != nil {
 			return err
 		}

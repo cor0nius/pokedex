@@ -35,14 +35,16 @@ func (c *Cache) reapLoop(interval time.Duration) {
 	defer c.mu.Unlock()
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
-	t := <-ticker.C
-	for {
-		for entry := range c.entries {
-			if t.After(c.entries[entry].createdAt.Add(interval)) {
-				delete(c.entries, entry)
+	func() {
+		t := <-ticker.C
+		for {
+			for entry := range c.entries {
+				if t.After(c.entries[entry].createdAt.Add(interval)) {
+					delete(c.entries, entry)
+				}
 			}
 		}
-	}
+	}()
 }
 
 func NewCache(interval time.Duration) *Cache {
