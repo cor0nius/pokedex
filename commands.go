@@ -1,11 +1,5 @@
 package main
 
-type cliCommand struct {
-	name        string
-	description string
-	callback    func() error
-}
-
 func getCommands() func() map[string]cliCommand {
 	return func() map[string]cliCommand {
 		comms := map[string]cliCommand{

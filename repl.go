@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+
+	pc "github.com/cor0nius/pokedexcli/internal"
 )
 
 func cleanInput(text string) []string {
@@ -15,13 +17,13 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandExit() error {
+func commandExit(cache *pc.Cache) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp() error {
+func commandHelp(cache *pc.Cache) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -32,65 +34,53 @@ func commandHelp() error {
 	return nil
 }
 
-func commandMap() error {
+func commandMap(cache *pc.Cache) error {
+	var locationAreas locationAreaAPI
 	url := nextPage(true)
 	resp, err := http.Get(url)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-	var locationAreas []string
-	decoder := json.NewDecoder(resp.Body)
-	for {
-		token, err := decoder.Token()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return err
-		}
-		if token == "name" {
-			token, _ := decoder.Token()
-			locationAreas = append(locationAreas, token.(string))
-		}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
 	}
-	for i := range locationAreas {
-		fmt.Println(locationAreas[i])
+	err = json.Unmarshal(data, &locationAreas)
+	if err != nil {
+		return err
+	}
+	for i := range locationAreas.Results {
+		fmt.Println(locationAreas.Results[i].Name)
 	}
 	return nil
 }
 
-func commandMapb() error {
+func commandMapb(cache *pc.Cache) error {
 	if mapPage > 1 {
+		var locationAreas locationAreaAPI
 		url := nextPage(false)
 		resp, err := http.Get(url)
 		if err != nil {
 			return err
 		}
 		defer resp.Body.Close()
-		var locationAreas []string
-		decoder := json.NewDecoder(resp.Body)
-		for {
-			token, err := decoder.Token()
-			if err == io.EOF {
-				break
-			}
-			if err != nil {
-				return err
-			}
-			if token == "name" {
-				token, _ := decoder.Token()
-				locationAreas = append(locationAreas, token.(string))
-			}
+		data, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return err
 		}
-		for i := range locationAreas {
-			fmt.Println(locationAreas[i])
+		err = json.Unmarshal(data, &locationAreas)
+		if err != nil {
+			return err
+		}
+		for i := range locationAreas.Results {
+			fmt.Println(locationAreas.Results[i].Name)
 		}
 		return nil
 	} else {
 		fmt.Println("you're on the first page")
+		return nil
 	}
-	return nil
 }
 
 func getMapPage(url string) func(bool) string {
