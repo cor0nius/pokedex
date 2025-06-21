@@ -20,7 +20,19 @@ type locationArea struct {
 	Url  string
 }
 
+type areaEncounters struct {
+	PokemonEncounters []PokemonEncounter `json:"pokemon_encounters"`
+}
+
+type PokemonEncounter struct {
+	Pokemon struct {
+		Name string `json:"name"`
+		Url  string `json:"url"`
+	} `json:"pokemon"`
+}
+
 type config struct {
 	next     string
 	previous string
+	area     string
 }

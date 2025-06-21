@@ -99,3 +99,26 @@ func commandMapb(cfg *config, cache *pc.Cache) error {
 		return nil
 	}
 }
+
+func commandExplore(cfg *config, cache *pc.Cache) error {
+	url := cfg.area
+	var encounters areaEncounters
+	var data []byte
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	data, err = io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(data, &encounters)
+	if err != nil {
+		return err
+	}
+	for encounter := range encounters.PokemonEncounters {
+		fmt.Println(encounters.PokemonEncounters[encounter].Pokemon.Name)
+	}
+	return nil
+}

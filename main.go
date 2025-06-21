@@ -16,6 +16,7 @@ func main() {
 	cfg := config{
 		"https://pokeapi.co/api/v2/location-area/",
 		"",
+		"",
 	}
 	for {
 		fmt.Print("Pokedex > ")
@@ -24,6 +25,9 @@ func main() {
 		if comm, ok := comms()[input[0]]; !ok {
 			fmt.Println("Unknown command")
 		} else {
+			if comm.name == "explore" {
+				cfg.area = "https://pokeapi.co/api/v2/location-area/" + input[1]
+			}
 			if err := comm.callback(&cfg, cache); err != nil {
 				fmt.Printf("Error: %v", err)
 			}
