@@ -13,6 +13,10 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	comms := getCommands()
 	cache := pokecache.NewCache(5 * time.Second)
+	cfg := config{
+		"https://pokeapi.co/api/v2/location-area/",
+		"",
+	}
 	for {
 		fmt.Print("Pokedex > ")
 		scanner.Scan()
@@ -20,7 +24,7 @@ func main() {
 		if comm, ok := comms()[input[0]]; !ok {
 			fmt.Println("Unknown command")
 		} else {
-			if err := comm.callback(cache); err != nil {
+			if err := comm.callback(&cfg, cache); err != nil {
 				fmt.Printf("Error: %v", err)
 			}
 		}

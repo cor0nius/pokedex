@@ -17,13 +17,13 @@ func cleanInput(text string) []string {
 	return words
 }
 
-func commandExit(cache *pc.Cache) error {
+func commandExit(cfg *config, cache *pc.Cache) error {
 	fmt.Println("Closing the Pokedex... Goodbye!")
 	os.Exit(0)
 	return nil
 }
 
-func commandHelp(cache *pc.Cache) error {
+func commandHelp(cfg *config, cache *pc.Cache) error {
 	fmt.Println("Welcome to the Pokedex!")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -34,10 +34,10 @@ func commandHelp(cache *pc.Cache) error {
 	return nil
 }
 
-func commandMap(cache *pc.Cache) error {
+func commandMap(cfg *config, cache *pc.Cache) error {
 	var locationAreas locationAreaAPI
 	var data []byte
-	url := nextPage(true)
+	url := cfg.next
 	_, ok := cache.Get(url)
 	if !ok {
 		resp, err := http.Get(url)
@@ -57,17 +57,18 @@ func commandMap(cache *pc.Cache) error {
 	if err != nil {
 		return err
 	}
+	cfg.next = locationAreas.Next
+	cfg.previous = locationAreas.Previous
 	for i := range locationAreas.Results {
 		fmt.Println(locationAreas.Results[i].Name)
 	}
 	return nil
 }
 
-func commandMapb(cache *pc.Cache) error {
-	if mapPage > 1 {
+func commandMapb(cfg *config, cache *pc.Cache) error {
+	if url := cfg.previous; url != "" {
 		var locationAreas locationAreaAPI
 		var data []byte
-		url := nextPage(false)
 		_, ok := cache.Get(url)
 		if !ok {
 			resp, err := http.Get(url)
@@ -87,6 +88,8 @@ func commandMapb(cache *pc.Cache) error {
 		if err != nil {
 			return err
 		}
+		cfg.next = locationAreas.Next
+		cfg.previous = locationAreas.Previous
 		for i := range locationAreas.Results {
 			fmt.Println(locationAreas.Results[i].Name)
 		}
@@ -96,20 +99,3 @@ func commandMapb(cache *pc.Cache) error {
 		return nil
 	}
 }
-
-func getMapPage(url string) func(bool) string {
-	return func(fwd bool) string {
-		newUrl := ""
-		if fwd {
-			mapPage++
-			newUrl = fmt.Sprintf("%s%d", url, (mapPage-1)*20)
-		} else {
-			mapPage--
-			newUrl = fmt.Sprintf("%s%d", url, (mapPage-1)*20)
-		}
-		return newUrl
-	}
-}
-
-var mapPage int
-var nextPage = getMapPage("https://pokeapi.co/api/v2/location-area/?offset=")

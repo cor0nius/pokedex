@@ -5,7 +5,7 @@ import pc "github.com/cor0nius/pokedexcli/internal"
 type cliCommand struct {
 	name        string
 	description string
-	callback    func(*pc.Cache) error
+	callback    func(*config, *pc.Cache) error
 }
 
 type locationAreaAPI struct {
@@ -18,4 +18,9 @@ type locationAreaAPI struct {
 type locationArea struct {
 	Name string
 	Url  string
+}
+
+type config struct {
+	next     string
+	previous string
 }
