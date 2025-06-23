@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"strings"
@@ -38,7 +39,7 @@ func commandMap(cfg *config, cache *pc.Cache) error {
 	var locationAreas locationAreaAPI
 	var data []byte
 	url := cfg.next
-	_, ok := cache.Get(url)
+	data, ok := cache.Get(url)
 	if !ok {
 		resp, err := http.Get(url)
 		if err != nil {
@@ -50,8 +51,6 @@ func commandMap(cfg *config, cache *pc.Cache) error {
 			return err
 		}
 		cache.Add(url, data)
-	} else {
-		data, _ = cache.Get(url)
 	}
 	err := json.Unmarshal(data, &locationAreas)
 	if err != nil {
@@ -69,7 +68,7 @@ func commandMapb(cfg *config, cache *pc.Cache) error {
 	if url := cfg.previous; url != "" {
 		var locationAreas locationAreaAPI
 		var data []byte
-		_, ok := cache.Get(url)
+		data, ok := cache.Get(url)
 		if !ok {
 			resp, err := http.Get(url)
 			if err != nil {
@@ -81,8 +80,6 @@ func commandMapb(cfg *config, cache *pc.Cache) error {
 				return err
 			}
 			cache.Add(url, data)
-		} else {
-			data, _ = cache.Get(url)
 		}
 		err := json.Unmarshal(data, &locationAreas)
 		if err != nil {
@@ -101,24 +98,74 @@ func commandMapb(cfg *config, cache *pc.Cache) error {
 }
 
 func commandExplore(cfg *config, cache *pc.Cache) error {
-	url := cfg.area
+	url := cfg.aux
 	var encounters areaEncounters
 	var data []byte
-	resp, err := http.Get(url)
-	if err != nil {
-		return err
+	data, ok := cache.Get(url)
+	if !ok {
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		data, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		cache.Add(url, data)
 	}
-	defer resp.Body.Close()
-	data, err = io.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	err = json.Unmarshal(data, &encounters)
+	err := json.Unmarshal(data, &encounters)
 	if err != nil {
 		return err
 	}
 	for encounter := range encounters.PokemonEncounters {
 		fmt.Println(encounters.PokemonEncounters[encounter].Pokemon.Name)
+	}
+	return nil
+}
+
+func commandCatch(cfg *config, cache *pc.Cache) error {
+	fmt.Printf("Throwing a Pokeball at %s...\n", cfg.name)
+	x := rand.Float64()
+	url := "https://pokeapi.co/api/v2/pokemon/" + cfg.name
+	var pokemon Pokemon
+	var data []byte
+	data, ok := cache.Get(url)
+	if !ok {
+		resp, err := http.Get(url)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+		data, err = io.ReadAll(resp.Body)
+		if err != nil {
+			return err
+		}
+		cache.Add(url, data)
+	}
+	err := json.Unmarshal(data, &pokemon)
+	if err != nil {
+		return err
+	}
+	catchRate := 100 - 0.15*float64(pokemon.BaseExp)
+	if x > catchRate/100 {
+		fmt.Printf("%s escaped!\n", cfg.name)
+	} else {
+		cfg.pokedex[pokemon.Name] = pokemon
+		fmt.Printf("%s was caught!\n", cfg.name)
+	}
+	return nil
+}
+
+func commandInspect(cfg *config, cache *pc.Cache) error {
+	pokemon, ok := cfg.pokedex[cfg.name]
+	if !ok {
+		fmt.Println("you have not caught that Pokemon")
+		return nil
+	}
+	fmt.Printf("Name: %v\nHeight: %vcm\nWeight: %vkg\nType(s):\n", pokemon.Name, pokemon.Height*10, pokemon.Weight/10)
+	for _, typ := range pokemon.Types {
+		fmt.Printf("	- %v\n", typ.Type.Name)
 	}
 	return nil
 }

@@ -3,21 +3,19 @@ package main
 import pc "github.com/cor0nius/pokedexcli/internal"
 
 type cliCommand struct {
-	name        string
-	description string
-	callback    func(*config, *pc.Cache) error
+	name, description string
+	callback          func(*config, *pc.Cache) error
 }
 
 type locationAreaAPI struct {
-	Count    int
-	Next     string
-	Previous string
-	Results  []locationArea
+	Next     string         `json:"next"`
+	Previous string         `json:"previous"`
+	Results  []locationArea `json:"results"`
 }
 
 type locationArea struct {
-	Name string
-	Url  string
+	Name string `json:"name"`
+	Url  string `json:"url"`
 }
 
 type areaEncounters struct {
@@ -25,14 +23,28 @@ type areaEncounters struct {
 }
 
 type PokemonEncounter struct {
-	Pokemon struct {
+	Pokemon Pokemon `json:"pokemon"`
+}
+
+type Pokemon struct {
+	Name    string        `json:"name"`
+	Url     string        `json:"url"`
+	BaseExp int           `json:"base_experience"`
+	Height  int           `json:"height"`
+	Weight  int           `json:"weight"`
+	Types   []PokemonType `json:"types"`
+}
+
+type PokemonType struct {
+	Type struct {
 		Name string `json:"name"`
-		Url  string `json:"url"`
-	} `json:"pokemon"`
+	} `json:"type"`
 }
 
 type config struct {
-	next     string
-	previous string
-	area     string
+	next, previous string
+	aux, name      string
+	pokedex        Pokedex
 }
+
+type Pokedex map[string]Pokemon
