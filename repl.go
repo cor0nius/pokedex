@@ -169,3 +169,11 @@ func commandInspect(cfg *config, cache *pc.Cache) error {
 	}
 	return nil
 }
+
+func commandPokedex(cfg *config, cache *pc.Cache) error {
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range cfg.pokedex {
+		fmt.Printf("- %s\n", pokemon.Name)
+	}
+	return nil
+}
